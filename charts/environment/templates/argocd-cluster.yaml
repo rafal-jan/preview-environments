@@ -1,0 +1,17 @@
+apiVersion: cluster.argocd.crossplane.io/v1alpha1
+kind: Cluster
+metadata:
+  name: {{ include "environment.fullname" . }}
+  namespace: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  forProvider:
+    config:
+      kubeconfigSecretRef:
+        key: config
+        name: vc-{{ .Release.Name }}
+        namespace: {{ .Release.Name }}
+    name: {{ .Release.Name }}
+  providerConfigRef:
+    name: argo-cd
