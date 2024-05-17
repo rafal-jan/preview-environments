@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-boostrap
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - pullRequest:
+      github:
+        owner: rafal-jan
+        repo: preview-environments
+      requeueAfterSeconds: 300
+  template:
+    metadata:
+      name: {{ printf "pr-{{.number}}-bootstrap" | quote }}
+      finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: "default"
+      source:
+        repoURL: https://github.com/rafal-jan/preview-environments.git
+        path: charts/environment
+        targetRevision: {{ printf "{{.head_sha}}" | quote }}
+        helm:
+          releaseName: {{ printf "pr-{{.number}}" | quote }}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: {{ .Release.Namespace }}
+      syncPolicy:
+        automated: {}
